@@ -5,15 +5,17 @@
 
 SwiftGrep is a cross-platform command-line text searching utility written in modern C++. It is inspired by the Unix `grep` utility and is being developed as a learning project focused on writing clean, portable, and efficient C++.
 
+## Command Syntax
+
+`swiftGrep [-i|-v|-c|-l|-f] SEARCH_TEXT FILE...`
+
 ## Current Features
 
 - Search text files for matching strings
 - Command-line interface
-- Display matching line numbers
-- Display source file names
 - Basic command-line argument validation
-- Case-insenstive searching with -i flag
 - Multiple file support
+- Flags: -i case-insensitive, -v invert-match, -c count-only, -l line-numbers, -f file-name
 
 ## Development Roadmap
 
@@ -25,9 +27,10 @@ SwiftGrep is a cross-platform command-line text searching utility written in mod
 - [x] Argument validation
 - [x] Case-insensitive searching (basic one flag option -i)
 - [x] Multiple file support
+- [x] One selectable command-line flag
 
 ### Planned
-- [ ] Multiple Command-line flags
+- [ ] Support multiple command-line flags simultaneously
 - [ ] Recursive directory searching
 - [ ] Unit tests
 - [ ] Performance optimization

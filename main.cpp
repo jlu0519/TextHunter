@@ -12,11 +12,14 @@ std::string lower(const std::string& str)
     return lowercaseText;
 }
 
-void search(const std::string& fileName, std::ifstream& file, const std::string& txt, bool caseInsensitive)
+void search(const std::string& fileName, std::ifstream& file, const std::string& txt, bool caseInsensitive,
+        bool invertMatch, bool countOnly, bool lineNumbers, bool showFile)
 {
     int lineNumber = 1;
+    int countOfLineMatches{};
     std::string line;
     std::string searchTxt = txt;
+    
 
     if(caseInsensitive)
     {
@@ -34,14 +37,48 @@ void search(const std::string& fileName, std::ifstream& file, const std::string&
                 std::cout << fileName << ":" << lineNumber << ":" << line << "\n";
             }
         }
+        else if(invertMatch)
+        {
+            if(line.find(searchTxt) == std::string::npos)
+            {
+                std::cout << line << "\n";
+            }
+        }
+        else if(countOnly)
+        {
+            if(line.find(searchTxt) != std::string::npos)
+            {
+                countOfLineMatches++;
+            }
+        }
+        else if(lineNumbers)
+        {
+            if(line.find(searchTxt) != std::string::npos)
+            {
+                std::cout << lineNumber << ":" << line << "\n";
+            }
+        }
+        else if(showFile)
+        {
+            if(line.find(searchTxt) != std::string::npos)
+            {
+                std::cout << fileName << ":" << line << "\n";
+            }
+        }
         else
         {
             if(line.find(searchTxt) != std::string::npos)
             {
-                std::cout << fileName << ":" << lineNumber << ":" << line << "\n";
+                std::cout << line << "\n";
             }
         }
+                
         lineNumber++;
+    }
+
+    if(countOnly)
+    {
+        std::cout << "Line Matches: " << countOfLineMatches << "\n";
     }
 }
 
@@ -50,12 +87,17 @@ int main(int argc, char* argv[])
     std::vector<std::string> commandArguments;  
     std::vector<std::string> userFiles; 
     std::string searchTxt = "";
+
+    // Flags / Options
     bool caseInsensitive {false};
+    bool invertMatch {false};
+    bool countOnly {false};
+    bool lineNumbers {false};
+    bool showFile {false};
 
     for(int i = 0; i < argc; ++i)
     {
        commandArguments.push_back(argv[i]);
-       
     }
     
     if(argc <= 1)
@@ -83,9 +125,77 @@ int main(int argc, char* argv[])
             return 1;
         }
     }
+    else if(commandArguments[1] == "-v") 
+    {
+        if(argc >= 4)
+        {
+            invertMatch = true;
+            searchTxt = commandArguments[2];
+            for(int i = 3; i < argc; ++i)
+            {
+                userFiles.push_back(commandArguments[i]);
+            } 
+        }
+        else
+        {
+            std::cerr << "Error Invalid Syntax: Hint: swiftGrep [-flag] {searchtxt} {file1} [file2 ...]" << std::endl;
+            return 1;
+        }
+    }
+    else if(commandArguments[1] == "-c") 
+    {
+        if(argc >= 4)
+        {
+            countOnly = true;
+            searchTxt = commandArguments[2];
+            for(int i = 3; i < argc; ++i)
+            {
+                userFiles.push_back(commandArguments[i]);
+            } 
+        }
+        else
+        {
+            std::cerr << "Error Invalid Syntax: Hint: swiftGrep [-flag] {searchtxt} {file1} [file2 ...]" << std::endl;
+            return 1;
+        }
+    }
+    else if(commandArguments[1] == "-l") 
+    {
+        if(argc >= 4)
+        {
+            lineNumbers = true;
+            searchTxt = commandArguments[2];
+            for(int i = 3; i < argc; ++i)
+            {
+                userFiles.push_back(commandArguments[i]);
+            } 
+        }
+        else
+        {
+            std::cerr << "Error Invalid Syntax: Hint: swiftGrep [-flag] {searchtxt} {file1} [file2 ...]" << std::endl;
+            return 1;
+        }
+    }
+    else if(commandArguments[1] == "-f") 
+    {
+        if(argc >= 4)
+        {
+            showFile = true;
+            searchTxt = commandArguments[2];
+            for(int i = 3; i < argc; ++i)
+            {
+                userFiles.push_back(commandArguments[i]);
+            } 
+        }
+        else
+        {
+            std::cerr << "Error Invalid Syntax: Hint: swiftGrep [-flag] {searchtxt} {file1} [file2 ...]" << std::endl;
+            return 1;
+        }
+    }
     else if(argc <= 2)
     {
-        std::cerr << "Error Invalid Syntax: Hint: swiftGrep [-flag] {searchtxt} {file.txt}" << std::endl;
+        std::cerr << "Error Invalid Syntax: Hint: swiftGrep [-flag] {searchtxt} {file1} [file2 ...]" << std::endl;
         return 1;
     }
     else
@@ -109,7 +219,7 @@ int main(int argc, char* argv[])
             continue;
         }
         
-        search(fileName, file, searchTxt, caseInsensitive);
+        search(fileName, file, searchTxt, caseInsensitive, invertMatch, countOnly, lineNumbers, showFile);
 
     }
 
