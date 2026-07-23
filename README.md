@@ -40,42 +40,35 @@ SwiftGrep is a cross-platform command-line text searching utility written in mod
 
 ## Usage
 
-**Basic search**
+### Basic search
 
+```bash
 swiftGrep hello file.txt
+```
 
-**Search multiple files
+### Search multiple files
 
+```bash
 swiftGrep hello file1.txt file2.txt file3.txt
+```
 
-**Case-insensitive search**
+### Case-insensitive search
 
+```bash
 swiftGrep -i hello file.txt
+```
 
-**Invert matches**
+### Combine flags
 
-swiftGrep -v hello file.txt
-
-**Count matching lines**
-
-swiftGrep -c hello file.txt
-
-**Display line numbers**
-
-swiftGrep -l hello file.txt
-
-**Display file names**
-
-swiftGrep -f hello file1.txt file2.txt
-
-**Combine flags**
-
+```bash
 swiftGrep -i -l -f hello file1.txt file2.txt
+```
 
-**Search for text beginning with '-'**
+### Search for text beginning with `-`
 
+```bash
 swiftGrep -- -x file.txt
+```
 
-*-- marks the end of command-line options. Any argument following -- is treated as search text, even if it begins with a hyphen (-).*
-
+> **Note:** `--` marks the end of command-line options. Any argument following `--` is treated as search text, even if it begins with a hyphen (`-`).
 
