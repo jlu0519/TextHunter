@@ -4,43 +4,14 @@
 #include <algorithm>
 #include <vector>
 
-struct set_flags(std::vector<std::string> flags)
+struct SetFlags
 {
-    struct setFlags
-    {
-        bool caseInsensitive {false};
-        bool invertMatch {false};
-        bool countOnly {false};
-        bool lineNumbers {false};
-        bool showFile {false};
-    };
-
-    for(const auto& flag : flags)
-    {
-        if(flag == "-i")
-        {
-            caseInsenstive = true;
-        }
-        if(flag == "-v")
-        {
-            invertMatch = true;
-        }
-        if(flag == "-c")
-        {
-            countOnly = true;
-        }
-        if(flag == "-l")
-        {
-            lineNumbers = true;
-        }
-        if(flag == "-f")
-        {
-            showFile = true;
-        }
-    }
-
-    return setFlags;
-}
+    bool caseInsensitive {false};    // -i
+    bool invertMatch {false};        // -v
+    bool countOnly {false};          // -c 
+    bool lineNumbers {false};        // -l
+    bool showFile {false};           // -f
+};
 
 // Converts string to lower case - Used in case-insensitive search.
 std::string lower(const std::string& str)
@@ -50,71 +21,84 @@ std::string lower(const std::string& str)
     return lowercaseText;
 }
 
-void search(const std::string& fileName, std::ifstream& file, const std::string& txt, struct setFlags)
+void search(const std::string& fileName, std::ifstream& file, const std::string& txt, const SetFlags& userFlags )
 {
     int lineNumber = 1;
     int countOfLineMatches{};
     std::string line;
     std::string searchTxt = txt;
-
-    if(caseInsensitive)
+    
+    // Normalize the search text once to avoid repeated conversions during case insensitive search
+    if(userFlags.caseInsensitive)
     {
-        searchTxt = lower(searchTxt);
+        searchTxt = lower(txt);
     }
-
+    
+    // Process each line independently, determining whether it should be accepted based on active search flags.
     while(std::getline(file,line))
     {
-        if(caseInsensitive)
+        bool acceptedLine = false;
+
+        // Determine whether the current line matches the search text
+        if(userFlags.caseInsensitive)
         {
             std::string lowercaseLine = lower(line);
 
             if(lowercaseLine.find(searchTxt) != std::string::npos)
             {
-                std::cout << fileName << ":" << lineNumber << ":" << line << "\n";
-            }
-        }
-        else if(invertMatch)
-        {
-            if(line.find(searchTxt) == std::string::npos)
-            {
-                std::cout << line << "\n";
-            }
-        }
-        else if(countOnly)
-        {
-            if(line.find(searchTxt) != std::string::npos)
-            {
-                countOfLineMatches++;
-            }
-        }
-        else if(lineNumbers)
-        {
-            if(line.find(searchTxt) != std::string::npos)
-            {
-                std::cout << lineNumber << ":" << line << "\n";
-            }
-        }
-        else if(showFile)
-        {
-            if(line.find(searchTxt) != std::string::npos)
-            {
-                std::cout << fileName << ":" << line << "\n";
+                acceptedLine = true;
             }
         }
         else
         {
             if(line.find(searchTxt) != std::string::npos)
             {
-                std::cout << line << "\n";
+                acceptedLine = true;
             }
         }
-                
-        lineNumber++;
-    }
+        
+        // Reverse the match decision when invert mode is enabled.
+        if(userFlags.invertMatch)
+        {
+            acceptedLine = !acceptedLine;
+        }
 
-    if(countOnly)
+        // Accepted lines are either counted or formatted for output depending on the selected command-line flags.
+        if(acceptedLine)
+        {
+            if(userFlags.countOnly)
+            {
+                ++countOfLineMatches;
+            }
+            else
+            {
+                if(userFlags.lineNumbers && userFlags.showFile)
+                {
+                    std::cout << fileName << ":" << lineNumber << ":" << line << std::endl;
+                }
+                else if(userFlags.lineNumbers)
+                {
+                    std::cout << lineNumber << ":" << line << std::endl;
+                }
+                else if(userFlags.showFile)
+                {
+                    std::cout << fileName << ":" << line << std::endl;
+                }
+                else
+                {
+                    std::cout << line << std::endl;
+                }
+            }
+        }
+
+        ++lineNumber;
+
+    }
+    
+    // Display the total number of accepted lines for this file.
+    if(userFlags.countOnly)
     {
-        std::cout << "Line Matches: " << countOfLineMatches << "\n";
+        std::cout << fileName << ":" <<  countOfLineMatches << std::endl;
     }
 }
 
@@ -122,39 +106,76 @@ int main(int argc, char* argv[])
 {
     std::vector<std::string> commandArguments;  
     std::vector<std::string> userFiles; 
-    std::vector<std::string> flags;
     std::string searchTxt = "";
-
+    int searchTxtIndex {};
+    int fileStartIndex {};
     int flagCount {};
+    SetFlags userFlags;
     
+    // Convert command-line arguments to strings for easier processing. 
     for(int i = 0; i < argc; ++i)
     {
         commandArguments.push_back(argv[i]);
-
-        if(commandArguments[i].front() == "-")
-        {
-            flags.push_back(commandArgument[i]);
-            flagCount++;
-        }
     }
 
+    // Parse consecutive flags at the beginning of the command.
+    for(int i = 1; i < argc; ++i)
+    {
+        if(commandArguments[i] == "-i")
+        {
+            userFlags.caseInsensitive = true;
+        }
+        else if(commandArguments[i] == "-v")
+        {
+            userFlags.invertMatch = true;
+        }
+        else if(commandArguments[i] == "-c")
+        {
+            userFlags.countOnly = true;
+        }
+        else if(commandArguments[i] == "-l")
+        {
+            userFlags.lineNumbers = true;
+        }
+        else if(commandArguments[i] == "-f")
+        {
+            userFlags.showFile = true;
+        }
+        // Stop parsing when the first non-flag argument is reached.
+        else
+        {
+            break;
+        }
+
+        ++flagCount;
+    }
+        
+    // Determine the positions of the search text and first filename
+    searchTxtIndex = flagCount + 1;
+    fileStartIndex = searchTxtIndex + 1;
+
+    // Input validation  
     if(argc <= 1)
     {
         std::cerr << "Error Invalid Syntax: Hint: swiftGrep [-flag] {searchtxt} {file1} [file2 ...]" << std::endl;
         return 1;
     }
-
-
-    searchTxt = commandArguments[flagCount];
-
-    // Setting flags 
-    struct chosenflags = set_flags(flags);
-
-    for(int i = ++flagCount; i < argc; ++i)
+    else if(argc <= fileStartIndex)
     {
-        userFiles.push_back(commandArguments[i];    
+        std::cerr << "Error Invalid Syntax: Hint: swiftGrep [-flag] {searchtxt} {file1} [file2 ...]" << std::endl;
+        return 1;
     }
 
+    // Search-text extraction
+    searchTxt = commandArguments[searchTxtIndex];
+
+    // Collect all filenames provided after search text.
+    for(int i = fileStartIndex; i < argc; ++i)
+    {
+        userFiles.push_back(commandArguments[i]);    
+    }
+
+    // Search for each file provided
     for(const auto& fileName : userFiles)
     {
         // Open file using the stream constructor
@@ -167,8 +188,7 @@ int main(int argc, char* argv[])
             continue;
         }
         
-        // Search
-        search(fileName, file, searchTxt, chosenFlags);
+        search(fileName, file, searchTxt, userFlags);
 
     }
 
