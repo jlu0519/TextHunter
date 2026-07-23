@@ -28,9 +28,9 @@ SwiftGrep is a cross-platform command-line text searching utility written in mod
 - [x] Case-insensitive searching (basic one flag option -i)
 - [x] Multiple file support
 - [x] One selectable command-line flag
+- [x] Support multiple command-line flags simultaneously
 
 ### Planned
-- [ ] Support multiple command-line flags simultaneously
 - [ ] Recursive directory searching
 - [ ] Unit tests
 - [ ] Performance optimization
